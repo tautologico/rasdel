@@ -49,7 +49,7 @@
   (SDL_Init mask))
 
 ;; TODO: add contract for init-subsystem
-(define (sdl-init-subsystem . subs)
+(define (sdl-init-subsystems . subs)
   (SDL_InitSubSystem (build-subsystem-flags subs)))
 
 (define (sdl-was-init? sub)
@@ -120,6 +120,8 @@
 
 (define sdl-revision-number (SDL_GetRevisionNumber))
 
+(define (sdl-get-revision) (SDL_GetRevision))
+
 
 ;;; --- SDL_error.h ------------------------------
 (define _SDL_errorcode
@@ -131,14 +133,22 @@
      SDL_UNSUPPORTED
      SDL_LASTERROR)))
 
+;; TODO: SDL_Error is an internal function; SDL_SetError
+;; may not be very useful for clients of this lib
+
 ;extern DECLSPEC int SDLCALL SDL_SetError(const char *fmt, ...);
-(define-sdl SDL_SetError (_fun _string -> _int))
+(define-sdl SDL_SetError (_fun _string -> _int)) ;; TODO: varargs
 ;extern DECLSPEC const char *SDLCALL SDL_GetError(void);
 (define-sdl SDL_GetError (_fun -> _string))
 ;extern DECLSPEC void SDLCALL SDL_ClearError(void);
 (define-sdl SDL_ClearError (_fun -> _void))
 ;extern DECLSPEC int SDLCALL SDL_Error(SDL_errorcode code);
 (define-sdl SDL_Error (_fun _SDL_errorcode -> _int))
+
+;; wrapper
+
+(define (sdl-get-error) (SDL_GetError))
+
 
 ;;; --- SDL_hints.h ------------------------------
 (define SDL_HINT_FRAMEBUFFER_ACCELERATION   "SDL_FRAMEBUFFER_ACCELERATION")

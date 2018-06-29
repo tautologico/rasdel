@@ -63,6 +63,18 @@
 ;;; Functions from C API
 ;;;
 
+;;; base pointer types
+(define-cpointer-type _uint8*)
+(define-cpointer-type _int8*)
+(define-cpointer-type _uint16*)
+(define-cpointer-type _int16*)
+(define-cpointer-type _uint32*)
+(define-cpointer-type _int32*)
+(define-cpointer-type _int*)
+(define-cpointer-type _size*)
+(define-cpointer-type _float*)
+
+
 ;;; --- SDL.h ------------------------------------
 (define SDL_INIT_TIMER          #x00000001)
 (define SDL_INIT_AUDIO          #x00000010)
@@ -134,7 +146,8 @@
      SDL_LASTERROR)))
 
 ;; TODO: SDL_Error is an internal function; SDL_SetError
-;; may not be very useful for clients of this lib
+;; may not be very
+;; useful for clients of this lib
 
 ;extern DECLSPEC int SDLCALL SDL_SetError(const char *fmt, ...);
 (define-sdl SDL_SetError (_fun _string -> _int)) ;; TODO: varargs

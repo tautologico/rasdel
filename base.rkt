@@ -163,7 +163,18 @@
 (define (sdl-get-error) (SDL_GetError))
 
 
+;;;
+;;; --- file operations --------------------------
+;;;
+
+(define-cpointer-type _SDL_RWops*)
+
+(define-sdl SDL_RWFromFile (_fun _string _string -> _SDL_RWops*))
+
+;;;
 ;;; --- SDL_hints.h ------------------------------
+;;;
+
 (define SDL_HINT_FRAMEBUFFER_ACCELERATION   "SDL_FRAMEBUFFER_ACCELERATION")
 (define SDL_HINT_RENDER_DRIVER              "SDL_RENDER_DRIVER")
 (define SDL_HINT_RENDER_OPENGL_SHADERS      "SDL_RENDER_OPENGL_SHADERS")

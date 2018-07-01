@@ -33,8 +33,11 @@
 (define (render-to-surface sfc)
   (define p (SDL_Surface-pixels sfc))
   (define f (SDL_Surface-format sfc))
-  (for ([i (in-range (* width height))])
-    (ptr-set! p _uint32 i (SDL_MapRGB f #xFF #x0 #x0))))
+  (for ([i (in-range 0 (* 4 width height) 4)])
+    (ptr-set! p _int8 i         -1)
+    (ptr-set! p _int8 (add1 i)   0)
+    (ptr-set! p _int8 (+ i 2)    0)
+    (ptr-set! p _int8 (+ i 3)    0)))
 
 (define frames 0)
 (define total 0)
@@ -51,6 +54,9 @@
     (set! total (+ total (- end start)))
     (render-loop win scr)))
 
+(define (hex32 n)
+  (~r n #:base 16 #:min-width 8 #:pad-string "0"))
+
 (define (main)
   (sdl-init #:video? #t #:audio? #f)
   (define win (sdl-create-window "Load BMP" width height))
@@ -59,12 +65,20 @@
     (error 'create-window
            (format "Could not create SDL window or get surface: ~a" (sdl-get-error))))
   (printf "Must lock window surface? ~a\n" (sdl-must-lock-surface? win-sfc))
+  (define sfc-format (SDL_Surface-format win-sfc))
   (printf "Window surface format name: ~a\n"
           (sdl-get-pixel-format-name
-           (SDL_PixelFormat-format (SDL_Surface-format win-sfc))))
+           (SDL_PixelFormat-format sfc-format)))
+  (printf "Bits per pixel: ~a - Bytes per pixel: ~a\n"
+          (SDL_PixelFormat-BitsPerPixel sfc-format)
+          (SDL_PixelFormat-BytesPerPixel sfc-format))
+  (printf "Red Mask: ~a - Blue Mask: ~a - Green Mask: ~a\n"
+          (hex32 (SDL_PixelFormat-Rmask sfc-format))
+          (hex32 (SDL_PixelFormat-Gmask sfc-format))
+          (hex32 (SDL_PixelFormat-Bmask sfc-format)))
   (init-surface win-sfc)
   (render-loop win win-sfc)
-
+  (printf "Rendered ~a frames, average ~a ms/frame\n" frames (/ total frames))
   (sdl-quit))
 
 (module+ main

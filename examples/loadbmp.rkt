@@ -1,6 +1,7 @@
 ;;
 ;; loadbmp.rkt
 ;; Load an image and render it to a window
+;; Use a timer to close the window
 ;;
 
 #lang racket

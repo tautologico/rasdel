@@ -360,6 +360,9 @@
 
 ;extern DECLSPEC const char* SDLCALL SDL_GetPixelFormatName(Uint32 format);
 (define-sdl SDL_GetPixelFormatName (_fun _uint32 -> _string))
+
+(define sdl-get-pixel-format-name SDL_GetPixelFormatName)
+
 ;SDL_bool SDLCALL SDL_PixelFormatEnumToMasks(Uint32 format, int *bpp,Uint32 * Rmask,Uint32 * Gmask,Uint32 * Bmask, Uint32 * Amask);
 (define-sdl SDL_PixelFormatEnumToMasks (_fun _uint32 _uint32* _uint32* _uint32* _uint32*  -> _bool))
 ;Uint32 SDL_MasksToPixelFormatEnum(int bpp, Uint32 Rmask, Uint32 Gmask,Uint32 Bmask,Uint32 Amask);
@@ -376,14 +379,19 @@
 (define-sdl SDL_SetPaletteColors (_fun _SDL_Palette-pointer _SDL_Color-pointer _int _int  -> _int))
 ;extern DECLSPEC void SDLCALL SDL_FreePalette(SDL_Palette * palette)
 (define-sdl SDL_FreePalette (_fun _SDL_Palette-pointer -> _void))
+
 ;extern DECLSPEC Uint32 SDLCALL SDL_MapRGB(const SDL_PixelFormat * format, Uint8 r, Uint8 g, Uint8 b);
 (define-sdl SDL_MapRGB (_fun _SDL_PixelFormat-pointer _uint8 _uint8 _uint8 -> _uint32))
+
 ;extern DECLSPEC Uint32 SDLCALL SDL_MapRGBA(const SDL_PixelFormat * format, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 (define-sdl SDL_MapRGBA (_fun _SDL_PixelFormat-pointer _uint8 _uint8 _uint8 _uint8 -> _uint32))
+
 ;extern DECLSPEC void SDLCALL SDL_GetRGB(Uint32 pixel, const SDL_PixelFormat * format, Uint8 * r, Uint8 * g, Uint8 * b);
 (define-sdl SDL_GetRGB (_fun _uint32 _SDL_PixelFormat-pointer _uint8* _uint8* _uint8* -> _void))
+
 ;extern DECLSPEC void SDLCALL SDL_GetRGBA(Uint32 pixel, const SDL_PixelFormat * format, Uint8 * r, Uint8 * g, Uint8 * b, Uint8 * a);
 (define-sdl SDL_GetRGBA (_fun _uint32 _SDL_PixelFormat-pointer _uint8* _uint8* _uint8* _uint8* -> _void))
+
 ;extern DECLSPEC void SDLCALL SDL_CalculateGammaRamp(float gamma, Uint16 * ramp);
 (define-sdl SDL_CalculateGammaRamp (_fun _float _uint16* -> _void))
 
@@ -422,8 +430,13 @@
 
 ;extern DECLSPEC int SDLCALL SDL_SetSurfacePalette(SDL_Surface * surface, SDL_Palette * palette);
 (define-sdl SDL_SetSurfacePalette (_fun _SDL_Surface-pointer _SDL_Palette-pointer -> _int))
+
+(define (sdl-must-lock-surface? s)
+  (not (zero? (bitwise-and (SDL_Surface-flags s) #x02))))
+
 ;extern DECLSPEC int SDLCALL SDL_LockSurface(SDL_Surface * surface);
 (define-sdl SDL_LockSurface (_fun _SDL_Surface-pointer -> _int))
+
 ;extern DECLSPEC void SDLCALL SDL_UnlockSurface(SDL_Surface * surface);
 (define-sdl SDL_UnlockSurface (_fun _SDL_Surface-pointer -> _void))
 

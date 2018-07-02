@@ -344,6 +344,17 @@
 (define SDL-ARRAY-ORDER-BGRA 5)
 (define SDL-ARRAY-ORDER-ABGR 6)
 
+;; packed component layout
+(define SDL-PACKED-LAYOUT-NONE    0)
+(define SDL-PACKED-LAYOUT-332     1)
+(define SDL-PACKED-LAYOUT-4444    2)
+(define SDL-PACKED-LAYOUT-1555    3)
+(define SDL-PACKED-LAYOUT-5551    4)
+(define SDL-PACKED-LAYOUT-565     5)
+(define SDL-PACKED-LAYOUT-8888    6)
+(define SDL-PACKED-LAYOUT-2101010 7)
+(define SDL-PACKED-LAYOUT-1010102 8)
+
 
 (define (define-pixel-format type order layout bits bytes)
   (bitwise-ior (arithmetic-shift 1 28)
@@ -354,9 +365,33 @@
                (arithmetic-shift bytes 0)))
 
 ;; pixel format constants
-(define SDL_PIXELFORMAT_UNKNOWN 0)
+(define SDL-PIXEL-FORMAT-UNKNOWN 0)
 #;(define SDL_PIXELFORMAT_INDEX1LSB
-  (define-pixel-format ))
+    (define-pixel-format ))
+
+(define SDL-PIXEL-FORMAT-RGB888
+  (define-pixel-format SDL-PIXEL-TYPE-PACKED32 SDL-PACKED-ORDER-XRGB
+    SDL-PACKED-LAYOUT-8888 24 4))
+
+(define SDL-PIXEL-FORMAT-RGBX8888
+  (define-pixel-format SDL-PIXEL-TYPE-PACKED32 SDL-PACKED-ORDER-RGBX
+    SDL-PACKED-LAYOUT-8888 24 4))
+
+(define SDL-PIXEL-FORMAT-BGR888
+  (define-pixel-format SDL-PIXEL-TYPE-PACKED32 SDL-PACKED-ORDER-XBGR
+    SDL-PACKED-LAYOUT-8888 24 4))
+
+(define SDL-PIXEL-FORMAT-BGRX8888
+  (define-pixel-format SDL-PIXEL-TYPE-PACKED32 SDL-PACKED-ORDER-BGRX
+    SDL-PACKED-LAYOUT-8888 24 4))
+
+(define SDL-PIXEL-FORMAT-ARGB8888
+  (define-pixel-format SDL-PIXEL-TYPE-PACKED32 SDL-PACKED-ORDER-ARGB
+    SDL-PACKED-LAYOUT-8888 32 4))
+
+(define SDL-PIXEL-FORMAT-RGBA8888
+  (define-pixel-format SDL-PIXEL-TYPE-PACKED32 SDL-PACKED-ORDER-RGBA
+    SDL-PACKED-LAYOUT-8888 32 4))
 
 ;extern DECLSPEC const char* SDLCALL SDL_GetPixelFormatName(Uint32 format);
 (define-sdl SDL_GetPixelFormatName (_fun _uint32 -> _string))
@@ -427,6 +462,14 @@
                                            _uint32 _uint32 _uint32 _uint32
                                            -> _SDL_Surface-pointer)
   #:wrap (allocator SDL_FreeSurface))
+
+;extern DECLSPEC SDL_Surface *SDLCALL SDL_CreateRGBSurfaceWithFormat (Uint32 flags, int width, int height, int depth, Uint32 format);
+(define-sdl SDL_CreateRGBSurfaceWithFormat (_fun _uint32 _int _int _int _uint32
+                                                 -> _SDL_Surface-pointer)
+  #:wrap (allocator SDL_FreeSurface))
+
+(define (sdl-create-rgb-surface-with-format width height depth fmt)
+  (SDL_CreateRGBSurfaceWithFormat 0 width height depth fmt))
 
 ;extern DECLSPEC int SDLCALL SDL_SetSurfacePalette(SDL_Surface * surface, SDL_Palette * palette);
 (define-sdl SDL_SetSurfacePalette (_fun _SDL_Surface-pointer _SDL_Palette-pointer -> _int))

@@ -1,8 +1,8 @@
 ;;
-;; winsurface.rkt
+;; blitsurface.rkt
 ;;
-;; Query information about the window surface
-;; and render directly to it
+;; Render to a surface with known pixel format
+;; and blit it to the window surface
 ;;
 
 #lang racket
@@ -40,31 +40,27 @@
 (define (render-to-surface sfc)
   (define p (SDL_Surface-pixels sfc))
   (define f (SDL_Surface-format sfc))
-  (define pval (SDL_MapRGB f 0 0 255))
-  (define b1 (band pval #xFF))
-  (define b2 (shift-right (band pval #xFF00) 8))
-  (define b3 (shift-right (band pval #xFF0000) 16))
-  (define b4 (shift-right (band pval #xFF000000) 24))
   (for ([i (in-range 0 (* 4 width height) 4)])
-    (ptr-set! p _uint8 i        b1)
-    (ptr-set! p _uint8 (add1 i) b2)
-    (ptr-set! p _uint8 (+ i 2)  b3)
-    (ptr-set! p _uint8 (+ i 3)  b4)))
+    (ptr-set! p _uint8 i        0)
+    (ptr-set! p _uint8 (add1 i) 0)
+    (ptr-set! p _uint8 (+ i 2)  255)
+    (ptr-set! p _uint8 (+ i 3)  0)))
 
 (define frames 0)
 (define total 0)
 
 ;; rendering loop
 ;; while a quit event is not received, render image to the window
-(define (render-loop win scr)
+(define (render-loop win win-sfc scr)
   (when (poll-loop)
     (define start (current-inexact-milliseconds))
     (render-to-surface scr)
+    (sdl-blit-surface scr win-sfc)
     (define end (current-inexact-milliseconds))
     (sdl-update-window-surface win)
     (set! frames (add1 frames))
     (set! total (+ total (- end start)))
-    (render-loop win scr)))
+    (render-loop win win-sfc scr)))
 
 (define (hex32 n)
   (~r n #:base 16 #:min-width 8 #:pad-string "0"))
@@ -73,12 +69,13 @@
   (sdl-init #:video? #t #:audio? #f)
   (define win (sdl-create-window "Load BMP" width height))
   (define win-sfc (sdl-get-window-surface win))
-  (unless (and win win-sfc)
+  (define sfc (sdl-create-rgb-surface-with-format width height 32 SDL-PIXEL-FORMAT-RGB888))
+  (unless (and win win-sfc sfc)
     (error 'create-window
-           (format "Could not create SDL window or get surface: ~a" (sdl-get-error))))
-  (printf "Must lock window surface? ~a\n" (sdl-must-lock-surface? win-sfc))
-  (define sfc-format (SDL_Surface-format win-sfc))
-  (printf "Window surface format name: ~a\n"
+           (format "Could not create SDL window or surface: ~a" (sdl-get-error))))
+  (printf "Must lock RGB surface? ~a\n" (sdl-must-lock-surface? sfc))
+  (define sfc-format (SDL_Surface-format sfc))
+  (printf "Surface format name: ~a\n"
           (sdl-get-pixel-format-name
            (SDL_PixelFormat-format sfc-format)))
   (printf "Bits per pixel: ~a - Bytes per pixel: ~a\n"
@@ -94,8 +91,8 @@
           (hex32 (SDL_MapRGB sfc-format 0 255 0)))
   (printf "MapRGB(0, 0, FF) = ~a\n"
           (hex32 (SDL_MapRGB sfc-format 0 0 255)))
-  (init-surface win-sfc)
-  (render-loop win win-sfc)
+  (init-surface sfc)
+  (render-loop win win-sfc sfc)
   (printf "Rendered ~a frames, average ~a ms/frame\n" frames (/ total frames))
   (sdl-quit))
 

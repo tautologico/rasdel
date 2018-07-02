@@ -32,15 +32,15 @@
         [else #t]))       ;; has no event -> return to main loop, not quit
 
 (define (init-surface sfc)
-  (memset (SDL_Surface-pixels sfc) 0 (* (SDL_Surface-h sfc) (SDL_Surface-pitch sfc))))
+  (memset (sdl-surface-pixels sfc) 0 (* (sdl-surface-h sfc) (sdl-surface-pitch sfc))))
 
 
 ;; Assume the surface doesn't need to be locked,
 ;; the pixel format is 32-bpp and pitch = 4 * width
 (define (render-to-surface sfc)
-  (define p (SDL_Surface-pixels sfc))
-  (define f (SDL_Surface-format sfc))
-  (define pval (SDL_MapRGB f 0 0 255))
+  (define p (sdl-surface-pixels sfc))
+  (define f (sdl-surface-format sfc))
+  (define pval (sdl-map-rgb f 0 0 255))
   (define b1 (band pval #xFF))
   (define b2 (shift-right (band pval #xFF00) 8))
   (define b3 (shift-right (band pval #xFF0000) 16))
@@ -51,6 +51,13 @@
     (ptr-set! p _uint8 (+ i 2)  b3)
     (ptr-set! p _uint8 (+ i 3)  b4)))
 
+(define (render-to-surface2 sfc)
+  (define p (sdl-surface-pixels sfc))
+  (define f (sdl-surface-format sfc))
+  (define pval (sdl-map-rgb f 0 0 255))
+  (for ([i (in-range 0 (* width height))])
+    (ptr-set! p _uint32 i pval)))
+
 (define frames 0)
 (define total 0)
 
@@ -59,7 +66,7 @@
 (define (render-loop win scr)
   (when (poll-loop)
     (define start (current-inexact-milliseconds))
-    (render-to-surface scr)
+    (render-to-surface2 scr)
     (define end (current-inexact-milliseconds))
     (sdl-update-window-surface win)
     (set! frames (add1 frames))
@@ -77,7 +84,7 @@
     (error 'create-window
            (format "Could not create SDL window or get surface: ~a" (sdl-get-error))))
   (printf "Must lock window surface? ~a\n" (sdl-must-lock-surface? win-sfc))
-  (define sfc-format (SDL_Surface-format win-sfc))
+  (define sfc-format (sdl-surface-format win-sfc))
   (printf "Window surface format name: ~a\n"
           (sdl-get-pixel-format-name
            (SDL_PixelFormat-format sfc-format)))
@@ -89,11 +96,11 @@
           (hex32 (SDL_PixelFormat-Gmask sfc-format))
           (hex32 (SDL_PixelFormat-Bmask sfc-format)))
   (printf "MapRGB(FF, 0, 0) = ~a\n"
-          (hex32 (SDL_MapRGB sfc-format 255 0 0)))
+          (hex32 (sdl-map-rgb sfc-format 255 0 0)))
   (printf "MapRGB(0, FF, 0) = ~a\n"
-          (hex32 (SDL_MapRGB sfc-format 0 255 0)))
+          (hex32 (sdl-map-rgb sfc-format 0 255 0)))
   (printf "MapRGB(0, 0, FF) = ~a\n"
-          (hex32 (SDL_MapRGB sfc-format 0 0 255)))
+          (hex32 (sdl-map-rgb sfc-format 0 0 255)))
   (init-surface win-sfc)
   (render-loop win win-sfc)
   (printf "Rendered ~a frames, average ~a ms/frame\n" frames (/ total frames))

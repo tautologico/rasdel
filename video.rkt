@@ -118,7 +118,7 @@
    [w _int]
    [h _int]))
 
-(define-cstruct _SDL_Surface
+(define-cstruct _sdl-surface
   ([flags _uint32]
    [format _SDL_PixelFormat-pointer]
    [w _int]
@@ -212,7 +212,7 @@
 ;extern DECLSPEC const char *SDLCALL SDL_GetWindowTitle(SDL_Window * window);
 (define-sdl SDL_GetWindowTitle (_fun _SDL_Window* -> _string))
 ;extern DECLSPEC void SDLCALL SDL_SetWindowIcon(SDL_Window * window, SDL_Surface * icon);
-(define-sdl SDL_SetWindowIcon (_fun _SDL_Window* _SDL_Surface-pointer -> _void))
+(define-sdl SDL_SetWindowIcon (_fun _SDL_Window* _sdl-surface-pointer -> _void))
 ;extern DECLSPEC void* SDLCALL SDL_SetWindowData(SDL_Window * window, const char *name, void *userdata);
 (define-sdl SDL_SetWindowData (_fun _SDL_Window* _string _pointer -> _pointer))
 ;extern DECLSPEC void *SDLCALL SDL_GetWindowData(SDL_Window * window, const char *name);
@@ -267,7 +267,7 @@
 (define-sdl SDL_SetWindowFullscreen (_fun _SDL_Window* _uint32 -> _int))
 
 ;extern DECLSPEC SDL_Surface * SDLCALL SDL_GetWindowSurface(SDL_Window * window);
-(define-sdl SDL_GetWindowSurface (_fun _SDL_Window* -> _SDL_Surface-pointer))
+(define-sdl SDL_GetWindowSurface (_fun _SDL_Window* -> _sdl-surface-pointer))
 
 (define sdl-get-window-surface SDL_GetWindowSurface)
 
@@ -418,8 +418,12 @@
 ;extern DECLSPEC Uint32 SDLCALL SDL_MapRGB(const SDL_PixelFormat * format, Uint8 r, Uint8 g, Uint8 b);
 (define-sdl SDL_MapRGB (_fun _SDL_PixelFormat-pointer _uint8 _uint8 _uint8 -> _uint32))
 
+(define sdl-map-rgb SDL_MapRGB)
+
 ;extern DECLSPEC Uint32 SDLCALL SDL_MapRGBA(const SDL_PixelFormat * format, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 (define-sdl SDL_MapRGBA (_fun _SDL_PixelFormat-pointer _uint8 _uint8 _uint8 _uint8 -> _uint32))
+
+(define sdl-map-rgba SDL_MapRGBA)
 
 ;extern DECLSPEC void SDLCALL SDL_GetRGB(Uint32 pixel, const SDL_PixelFormat * format, Uint8 * r, Uint8 * g, Uint8 * b);
 (define-sdl SDL_GetRGB (_fun _uint32 _SDL_PixelFormat-pointer _uint8* _uint8* _uint8* -> _void))
@@ -447,107 +451,309 @@
   (SDL_BlitSurface src #f dest #f))
 
 ;extern DECLSPEC void SDLCALL SDL_FreeSurface(SDL_Surface * surface);
-(define-sdl SDL_FreeSurface (_fun _SDL_Surface-pointer -> _void)
+(define-sdl SDL_FreeSurface (_fun _sdl-surface-pointer -> _void)
   #:wrap (deallocator))
 
 
 ;extern DECLSPEC SDL_Surface *SDLCALL SDL_CreateRGBSurface (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
 (define-sdl SDL_CreateRGBSurface (_fun _uint32 _int _int _int
                                        _uint32 _uint32 _uint32 _uint32
-                                       -> _SDL_Surface-pointer)
+                                       -> _sdl-surface-pointer)
   #:wrap (allocator SDL_FreeSurface))
 
 ;extern DECLSPEC SDL_Surface *SDLCALL SDL_CreateRGBSurfaceFrom(void *pixels, int width,int height,int depth,int pitch,Uint32 Rmask,Uint32 Gmask,Uint32 Bmask,Uint32 Amask);
 (define-sdl SDL_CreateRGBSurfaceFrom (_fun _pointer _int _int _int _int
                                            _uint32 _uint32 _uint32 _uint32
-                                           -> _SDL_Surface-pointer)
+                                           -> _sdl-surface-pointer)
   #:wrap (allocator SDL_FreeSurface))
 
 ;extern DECLSPEC SDL_Surface *SDLCALL SDL_CreateRGBSurfaceWithFormat (Uint32 flags, int width, int height, int depth, Uint32 format);
 (define-sdl SDL_CreateRGBSurfaceWithFormat (_fun _uint32 _int _int _int _uint32
-                                                 -> _SDL_Surface-pointer)
+                                                 -> _sdl-surface-pointer)
   #:wrap (allocator SDL_FreeSurface))
 
 (define (sdl-create-rgb-surface-with-format width height depth fmt)
   (SDL_CreateRGBSurfaceWithFormat 0 width height depth fmt))
 
 ;extern DECLSPEC int SDLCALL SDL_SetSurfacePalette(SDL_Surface * surface, SDL_Palette * palette);
-(define-sdl SDL_SetSurfacePalette (_fun _SDL_Surface-pointer _SDL_Palette-pointer -> _int))
+(define-sdl SDL_SetSurfacePalette (_fun _sdl-surface-pointer _SDL_Palette-pointer -> _int))
 
 (define (sdl-must-lock-surface? s)
-  (not (zero? (bitwise-and (SDL_Surface-flags s) #x02))))
+  (not (zero? (bitwise-and (sdl-surface-flags s) #x02))))
 
 ;extern DECLSPEC int SDLCALL SDL_LockSurface(SDL_Surface * surface);
-(define-sdl SDL_LockSurface (_fun _SDL_Surface-pointer -> _int))
+(define-sdl SDL_LockSurface (_fun _sdl-surface-pointer -> _int))
 
 ;extern DECLSPEC void SDLCALL SDL_UnlockSurface(SDL_Surface * surface);
-(define-sdl SDL_UnlockSurface (_fun _SDL_Surface-pointer -> _void))
+(define-sdl SDL_UnlockSurface (_fun _sdl-surface-pointer -> _void))
 
 ;extern DECLSPEC SDL_Surface *SDLCALL SDL_LoadBMP_RW(SDL_RWops * src, int freesrc);
-(define-sdl SDL_LoadBMP_RW (_fun _pointer _int -> _SDL_Surface-pointer)
+(define-sdl SDL_LoadBMP_RW (_fun _pointer _int -> _sdl-surface-pointer)
   #:wrap (allocator SDL_FreeSurface))
 
 ;extern DECLSPEC int SDLCALL SDL_SaveBMP_RW (SDL_Surface * surface, SDL_RWops * dst, int freedst);
-(define-sdl SDL_SaveBMP_RW (_fun _SDL_Surface-pointer _pointer _int -> _int))
+(define-sdl SDL_SaveBMP_RW (_fun _sdl-surface-pointer _pointer _int -> _int))
 ;#define SDL_SaveBMP(surface, file) SDL_SaveBMP_RW(surface, SDL_RWFromFile(file, "wb"), 1)
 #;(define (SDL_SaveBMP surface file) (SDL_SaveBMP_RW surface (SDL_RWFromFile file "wb") 1))
 ;extern DECLSPEC int SDLCALL SDL_SetSurfaceRLE(SDL_Surface * surface, int flag);
-(define-sdl SDL_SetSurfaceRLE (_fun _SDL_Surface-pointer _int -> _int))
+(define-sdl SDL_SetSurfaceRLE (_fun _sdl-surface-pointer _int -> _int))
 ;extern DECLSPEC int SDLCALL SDL_SetColorKey(SDL_Surface * surface,int flag, Uint32 key);
-(define-sdl SDL_SetColorKey (_fun _SDL_Surface-pointer _int _uint32 -> _int))
+(define-sdl SDL_SetColorKey (_fun _sdl-surface-pointer _int _uint32 -> _int))
 ;extern DECLSPEC int SDLCALL SDL_GetColorKey(SDL_Surface * surface,Uint32 * key);
-(define-sdl SDL_GetColorKey (_fun _SDL_Surface-pointer _uint32* -> _int))
+(define-sdl SDL_GetColorKey (_fun _sdl-surface-pointer _uint32* -> _int))
 ;extern DECLSPEC int SDLCALL SDL_SetSurfaceColorMod(SDL_Surface * surface, Uint8 r, Uint8 g, Uint8 b);
-(define-sdl SDL_SetSurfaceColorMod (_fun _SDL_Surface-pointer _uint8 _uint8 _uint8 -> _int))
+(define-sdl SDL_SetSurfaceColorMod (_fun _sdl-surface-pointer _uint8 _uint8 _uint8 -> _int))
 ;extern DECLSPEC int SDLCALL SDL_GetSurfaceColorMod(SDL_Surface * surface, Uint8 * r, Uint8 * g, Uint8 * b);
-(define-sdl SDL_GetSurfaceColorMod (_fun _SDL_Surface-pointer _uint8* _uint8* _uint8* -> _int))
+(define-sdl SDL_GetSurfaceColorMod (_fun _sdl-surface-pointer _uint8* _uint8* _uint8* -> _int))
 ;extern DECLSPEC int SDLCALL SDL_SetSurfaceAlphaMod(SDL_Surface * surface, Uint8 alpha);
-(define-sdl SDL_SetSurfaceAlphaMod (_fun _SDL_Surface-pointer _uint8 -> _int))
+(define-sdl SDL_SetSurfaceAlphaMod (_fun _sdl-surface-pointer _uint8 -> _int))
 ;extern DECLSPEC int SDLCALL SDL_GetSurfaceAlphaMod(SDL_Surface * surface, Uint8 * alpha);
-(define-sdl SDL_GetSurfaceAlphaMod (_fun _SDL_Surface-pointer _uint8* -> _int))
+(define-sdl SDL_GetSurfaceAlphaMod (_fun _sdl-surface-pointer _uint8* -> _int))
 ;extern DECLSPEC int SDLCALL SDL_SetSurfaceBlendMode(SDL_Surface * surface, SDL_BlendMode blendMode);
-(define-sdl SDL_SetSurfaceBlendMode (_fun _SDL_Surface-pointer _SDL_BlendMode -> _int))
+(define-sdl SDL_SetSurfaceBlendMode (_fun _sdl-surface-pointer _SDL_BlendMode -> _int))
 ;extern DECLSPEC int SDLCALL SDL_GetSurfaceBlendMode(SDL_Surface * surface, SDL_BlendMode *blendMode);
-(define-sdl SDL_GetSurfaceBlendMode (_fun _SDL_Surface-pointer _pointer -> _int))
+(define-sdl SDL_GetSurfaceBlendMode (_fun _sdl-surface-pointer _pointer -> _int))
 ;extern DECLSPEC SDL_bool SDLCALL SDL_SetClipRect(SDL_Surface * surface, const SDL_Rect * rect);
-(define-sdl SDL_SetClipRect (_fun _SDL_Surface-pointer _sdl-rect-pointer -> _bool))
+(define-sdl SDL_SetClipRect (_fun _sdl-surface-pointer _sdl-rect-pointer -> _bool))
 ;extern DECLSPEC void SDLCALL SDL_GetClipRect(SDL_Surface * surface, SDL_Rect * rect);
-(define-sdl SDL_GetClipRect (_fun _SDL_Surface-pointer _sdl-rect-pointer -> _void))
+(define-sdl SDL_GetClipRect (_fun _sdl-surface-pointer _sdl-rect-pointer -> _void))
 ;extern DECLSPEC SDL_Surface *SDLCALL SDL_ConvertSurface (SDL_Surface * src, SDL_PixelFormat * fmt, Uint32 flags);
-(define-sdl SDL_ConvertSurface (_fun _SDL_Surface-pointer _SDL_PixelFormat-pointer _uint32 -> _SDL_Surface-pointer))
+(define-sdl SDL_ConvertSurface (_fun _sdl-surface-pointer _SDL_PixelFormat-pointer _uint32 -> _sdl-surface-pointer))
 ;extern DECLSPEC SDL_Surface *SDLCALL SDL_ConvertSurfaceFormat(SDL_Surface * src, Uint32 pixel_format, Uint32 flags);
-(define-sdl SDL_ConvertSurfaceFormat (_fun _SDL_Surface-pointer _uint32 _uint32 -> _SDL_Surface-pointer))
+(define-sdl SDL_ConvertSurfaceFormat (_fun _sdl-surface-pointer _uint32 _uint32 -> _sdl-surface-pointer))
 ;extern DECLSPEC int SDLCALL SDL_ConvertPixels(int width, int height, Uint32 src_format, const void * src, int src_pitch, Uint32 dst_format, void * dst, int dst_pitch);
 (define-sdl SDL_ConvertPixels (_fun _int _int _uint32 _pointer _int _uint32 _pointer _int -> _int))
 ;extern DECLSPEC int SDLCALL SDL_FillRect (SDL_Surface * dst, const SDL_Rect * rect, Uint32 color);
-(define-sdl SDL_FillRect (_fun _SDL_Surface-pointer _sdl-rect-pointer/null _uint32 -> _int))
+(define-sdl SDL_FillRect (_fun _sdl-surface-pointer _sdl-rect-pointer/null _uint32 -> _int))
 ;extern DECLSPEC int SDLCALL SDL_FillRects (SDL_Surface * dst, const SDL_Rect * rects, int count, Uint32 color);
-(define-sdl SDL_FillRects (_fun _SDL_Surface-pointer _sdl-rect-pointer/null _int _uint32 -> _int))
+(define-sdl SDL_FillRects (_fun _sdl-surface-pointer _sdl-rect-pointer/null _int _uint32 -> _int))
 
 ;extern DECLSPEC int SDLCALL SDL_UpperBlit (SDL_Surface * src, const SDL_Rect * srcrect, SDL_Surface * dst, SDL_Rect * dstrect);
-(define-sdl SDL_UpperBlit (_fun _SDL_Surface-pointer _sdl-rect-pointer/null
-                                _SDL_Surface-pointer _sdl-rect-pointer/null
+(define-sdl SDL_UpperBlit (_fun _sdl-surface-pointer _sdl-rect-pointer/null
+                                _sdl-surface-pointer _sdl-rect-pointer/null
                                 -> _int))
 
 ;#define SDL_BlitSurface SDL_UpperBlit
 (define SDL_BlitSurface SDL_UpperBlit)
 
 ;extern DECLSPEC int SDLCALL SDL_LowerBlit (SDL_Surface * src, SDL_Rect * srcrect, SDL_Surface * dst, SDL_Rect * dstrect);
-(define-sdl SDL_LowerBlit (_fun _SDL_Surface-pointer _sdl-rect-pointer/null
-                                _SDL_Surface-pointer _sdl-rect-pointer/null
+(define-sdl SDL_LowerBlit (_fun _sdl-surface-pointer _sdl-rect-pointer/null
+                                _sdl-surface-pointer _sdl-rect-pointer/null
                                 -> _int))
 
 ;extern DECLSPEC int SDLCALL SDL_UpperBlitScaled (SDL_Surface * src, const SDL_Rect * srcrect, SDL_Surface * dst, SDL_Rect * dstrect);
-(define-sdl SDL_UpperBlitScaled (_fun _SDL_Surface-pointer _sdl-rect-pointer/null
-                                      _SDL_Surface-pointer _sdl-rect-pointer/null
+(define-sdl SDL_UpperBlitScaled (_fun _sdl-surface-pointer _sdl-rect-pointer/null
+                                      _sdl-surface-pointer _sdl-rect-pointer/null
                                       -> _int))
 
 ;#define SDL_BlitScaled SDL_UpperBlitScaled
 (define SDL_BlitScaled SDL_UpperBlitScaled)
 ;extern DECLSPEC int SDLCALL SDL_LowerBlitScaled (SDL_Surface * src, SDL_Rect * srcrect, SDL_Surface * dst, SDL_Rect * dstrect);
-(define-sdl SDL_LowerBlitScaled (_fun _SDL_Surface-pointer _sdl-rect-pointer
-                                      _SDL_Surface-pointer _sdl-rect-pointer
+(define-sdl SDL_LowerBlitScaled (_fun _sdl-surface-pointer _sdl-rect-pointer
+                                      _sdl-surface-pointer _sdl-rect-pointer
                                       -> _int))
+
+
+;;
+;; --- 2D accelerated rendering ------------------
+;;
+
+(define _SDL_RendererFlags
+  (_bitmask
+   '(SDL-RENDERER-SOFTWARE      = #x00000001
+     SDL-RENDERER-ACCELERATED   = #x00000002
+     SDL-RENDERER-PRESENTVSYNC  = #x00000004
+     SDL-RENDERER-TARGETTEXTURE = #x00000008)))
+
+(define _SDL_TextureAccess
+  (_enum
+   '(SDL-TEXTUREACCESS-STATIC
+     SDL-TEXTUREACCESS-STREAMING
+     SDL-TEXTUREACCESS-TARGET)))
+
+(define _SDL_TextureModulate
+  (_enum
+   '(SDL_TEXTUREMODULATE_NONE = #x00000000
+     SDL_TEXTUREMODULATE_COLOR = #x00000001
+     SDL_TEXTUREMODULATE_ALPHA = #x00000002)))
+
+(define _SDL_RendererFlip
+  (_enum
+   '(SDL_FLIP_NONE = #x00000000
+     SDL_FLIP_HORIZONTAL = #x00000001
+     SDL_FLIP_VERTICAL = #x00000002)))
+
+(define-cstruct _sdl-renderer-info
+  ([name _string]
+   [flags _uint32]
+   [num-texture-formats _uint32]
+   [texture-formats (make-array-type _uint32 16)]
+   [max-texture-width _int]
+   [max-texture-height _int]))
+
+(define-cpointer-type _SDL_Renderer)
+(define-cpointer-type _SDL_Texture)
+
+;; functions
+
+;extern DECLSPEC int SDLCALL SDL_GetNumRenderDrivers(void);
+(define-sdl SDL_GetNumRenderDrivers (_fun -> _int))
+
+(define sdl-get-num-render-drivers SDL_GetNumRenderDrivers)
+
+
+;extern DECLSPEC int SDLCALL SDL_GetRenderDriverInfo(int index,SDL_RendererInfo * info);
+(define-sdl SDL_GetRenderDriverInfo (_fun _int [r : (_ptr o _sdl-renderer-info)]
+                                          -> (err : _int)
+                                          -> (if (zero? err) r #f)))
+
+(define sdl-get-render-driver-info SDL_GetRenderDriverInfo)
+
+;extern DECLSPEC int SDLCALL SDL_CreateWindowAndRenderer( int width, int height, Uint32 window_flags, SDL_Window **window, SDL_Renderer **renderer);
+#;(define-sdl SDL_CreateWindowAndRenderer (_fun _int _int _uint32 _pointer _pointer -> _int))
+
+;extern DECLSPEC void SDLCALL SDL_DestroyRenderer(SDL_Renderer * renderer);
+(define-sdl SDL_DestroyRenderer (_fun _SDL_Renderer -> _void)
+  #:wrap (deallocator))
+
+;extern DECLSPEC SDL_Renderer * SDLCALL SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags);
+(define-sdl SDL_CreateRenderer (_fun _SDL_Window* _int _SDL_RendererFlags -> _SDL_Renderer)
+  #:wrap (allocator SDL_DestroyRenderer))
+
+(define (sdl-create-renderer win [ix -1])
+  (SDL_CreateRenderer win ix
+                      '(SDL-RENDERER-ACCELERATED
+                        SDL-RENDERER-TARGETTEXTURE)))
+
+;extern DECLSPEC SDL_Renderer * SDLCALL SDL_CreateSoftwareRenderer(SDL_Surface * surface);
+(define-sdl SDL_CreateSoftwareRenderer (_fun _sdl-surface-pointer -> _SDL_Renderer))
+;extern DECLSPEC SDL_Renderer * SDLCALL SDL_GetRenderer(SDL_Window * window);
+(define-sdl SDL_GetRenderer (_fun _SDL_Window* -> _SDL_Renderer))
+;extern DECLSPEC int SDLCALL SDL_GetRendererInfo(SDL_Renderer * renderer, SDL_RendererInfo * info);
+(define-sdl SDL_GetRendererInfo (_fun _SDL_Renderer _sdl-renderer-info-pointer -> _int))
+;extern DECLSPEC int SDLCALL SDL_GetRendererOutputSize(SDL_Renderer * renderer, int *w, int *h);
+(define-sdl SDL_GetRendererOutputSize (_fun _SDL_Renderer _int* _int* -> _int))
+
+;extern DECLSPEC void SDLCALL SDL_DestroyTexture(SDL_Texture * texture);
+(define-sdl SDL_DestroyTexture (_fun _SDL_Texture -> _void  )
+  #:wrap (deallocator))
+
+;extern DECLSPEC SDL_Texture * SDLCALL SDL_CreateTexture(SDL_Renderer * renderer, Uint32 format, int access, int w, int h);
+(define-sdl SDL_CreateTexture (_fun _SDL_Renderer _uint32 _SDL_TextureAccess
+                                    _int _int -> _SDL_Texture)
+  #:wrap (allocator SDL_DestroyTexture))
+
+(define sdl-create-texture SDL_CreateTexture)
+
+(define (sdl-create-streaming-texture render fmt width height)
+  (SDL_CreateTexture render fmt 'SDL-TEXTUREACCESS-STREAMING width height))
+
+
+;extern DECLSPEC SDL_Texture * SDLCALL SDL_CreateTextureFromSurface(SDL_Renderer * renderer, SDL_Surface * surface);
+(define-sdl SDL_CreateTextureFromSurface (_fun _SDL_Renderer _sdl-surface-pointer -> _SDL_Texture ))
+;extern DECLSPEC int SDLCALL SDL_QueryTexture(SDL_Texture * texture, Uint32 * format, int *access, int *w, int *h);
+(define-sdl SDL_QueryTexture (_fun _SDL_Texture _uint32* _int* _int* _int* -> _int))
+;extern DECLSPEC int SDLCALL SDL_SetTextureColorMod(SDL_Texture * texture, Uint8 r, Uint8 g, Uint8 b);
+(define-sdl SDL_SetTextureColorMod (_fun _SDL_Texture _uint8 _uint8 _uint8 -> _int))
+;extern DECLSPEC int SDLCALL SDL_GetTextureColorMod(SDL_Texture * texture, Uint8 * r, Uint8 * g, Uint8 * b);
+(define-sdl SDL_GetTextureColorMod (_fun _SDL_Texture _uint8* _uint8 _uint8 -> _int))
+;extern DECLSPEC int SDLCALL SDL_SetTextureAlphaMod(SDL_Texture * texture, Uint8 alpha);
+(define-sdl SDL_SetTextureAlphaMod (_fun _SDL_Texture _uint8 -> _int))
+;extern DECLSPEC int SDLCALL SDL_GetTextureAlphaMod(SDL_Texture * texture, Uint8 * alpha);
+(define-sdl SDL_GetTextureAlphaMod (_fun _SDL_Texture _uint8* -> _int))
+;extern DECLSPEC int SDLCALL SDL_SetTextureBlendMode(SDL_Texture * texture, SDL_BlendMode blendMode);
+(define-sdl SDL_SetTextureBlendMode (_fun _SDL_Texture _SDL_BlendMode -> _int))
+;extern DECLSPEC int SDLCALL SDL_GetTextureBlendMode(SDL_Texture * texture, SDL_BlendMode *blendMode);
+(define-sdl SDL_GetTextureBlendMode (_fun _SDL_Texture _pointer -> _int))
+;extern DECLSPEC int SDLCALL SDL_UpdateTexture(SDL_Texture * texture, const SDL_Rect * rect, const void *pixels, int pitch);
+(define-sdl SDL_UpdateTexture (_fun _SDL_Texture _sdl-rect-pointer _pointer _int -> _int))
+
+;extern DECLSPEC int SDLCALL SDL_LockTexture(SDL_Texture * texture, const SDL_Rect * rect, void **pixels, int *pitch);
+(define-sdl SDL_LockTexture (_fun _SDL_Texture _sdl-rect-pointer/null
+                                  [px : (_ptr o _uint8*)]
+                                  [pitch : (_ptr o _int)]
+                                  -> (err : _int)
+                                  -> (if (zero? err) (values px pitch) (values #f #f))))
+
+(define sdl-lock-texture SDL_LockTexture)
+
+;extern DECLSPEC void SDLCALL SDL_UnlockTexture(SDL_Texture * texture);
+(define-sdl SDL_UnlockTexture (_fun _SDL_Texture -> _void))
+
+(define sdl-unlock-texture SDL_UnlockTexture)
+
+;extern DECLSPEC SDL_bool SDLCALL SDL_RenderTargetSupported(SDL_Renderer *renderer);
+(define-sdl SDL_RenderTargetSupported (_fun _SDL_Renderer -> _bool))
+;extern DECLSPEC int SDLCALL SDL_SetRenderTarget(SDL_Renderer *renderer, SDL_Texture *texture);
+(define-sdl SDL_SetRenderTarget (_fun _SDL_Renderer _SDL_Texture -> _int))
+;extern DECLSPEC SDL_Texture * SDLCALL SDL_GetRenderTarget(SDL_Renderer *renderer);
+(define-sdl SDL_GetRenderTarget (_fun _SDL_Renderer -> _SDL_Texture ))
+;extern DECLSPEC int SDLCALL SDL_RenderSetLogicalSize(SDL_Renderer * renderer, int w, int h);
+(define-sdl SDL_RenderSetLogicalSize (_fun _SDL_Renderer _int _int -> _int))
+;extern DECLSPEC void SDLCALL SDL_RenderGetLogicalSize(SDL_Renderer * renderer, int *w, int *h);
+(define-sdl SDL_RenderGetLogicalSize (_fun _SDL_Renderer _int* _int* -> _void))
+;extern DECLSPEC int SDLCALL SDL_RenderSetViewport(SDL_Renderer * renderer, const SDL_Rect * rect);
+(define-sdl SDL_RenderSetViewport (_fun _SDL_Renderer _sdl-rect-pointer -> _int))
+;extern DECLSPEC void SDLCALL SDL_RenderGetViewport(SDL_Renderer * renderer, SDL_Rect * rect);
+(define-sdl SDL_RenderGetViewport (_fun _SDL_Renderer _sdl-rect-pointer -> _void  ))
+;extern DECLSPEC int SDLCALL SDL_RenderSetClipRect(SDL_Renderer * renderer, const SDL_Rect * rect);
+(define-sdl SDL_RenderSetClipRect (_fun _SDL_Renderer _sdl-rect-pointer -> _int  ))
+;extern DECLSPEC void SDLCALL SDL_RenderGetClipRect(SDL_Renderer * renderer, SDL_Rect * rect);
+(define-sdl SDL_RenderGetClipRect (_fun _SDL_Renderer _sdl-rect-pointer -> _void))
+;extern DECLSPEC int SDLCALL SDL_RenderSetScale(SDL_Renderer * renderer, float scaleX, float scaleY);
+(define-sdl SDL_RenderSetScale (_fun _SDL_Renderer _float _float -> _int))
+;extern DECLSPEC void SDLCALL SDL_RenderGetScale(SDL_Renderer * renderer, float *scaleX, float *scaleY);
+(define-sdl SDL_RenderGetScale (_fun _SDL_Renderer _float* _float* -> _void))
+;extern DECLSPEC int SDL_SetRenderDrawColor(SDL_Renderer * renderer, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+(define-sdl SDL_SetRenderDrawColor (_fun _SDL_Renderer _uint8 _uint8 _uint8 _uint8 -> _int ))
+;extern DECLSPEC int SDL_GetRenderDrawColor(SDL_Renderer * renderer, Uint8 * r, Uint8 * g, Uint8 * b, Uint8 * a);
+(define-sdl SDL_GetRenderDrawColor (_fun _SDL_Renderer _uint8* _uint8* _uint8* _uint8* -> _int))
+;extern DECLSPEC int SDLCALL SDL_SetRenderDrawBlendMode(SDL_Renderer * renderer, SDL_BlendMode blendMode);
+(define-sdl SDL_SetRenderDrawBlendMode (_fun _SDL_Renderer _SDL_BlendMode -> _int  ))
+;extern DECLSPEC int SDLCALL SDL_GetRenderDrawBlendMode(SDL_Renderer * renderer, SDL_BlendMode *blendMode);
+(define-sdl SDL_GetRenderDrawBlendMode (_fun _SDL_Renderer _pointer -> _int  ))
+;extern DECLSPEC int SDLCALL SDL_RenderClear(SDL_Renderer * renderer);
+(define-sdl SDL_RenderClear (_fun _SDL_Renderer -> _int  ))
+;extern DECLSPEC int SDLCALL SDL_RenderDrawPoint(SDL_Renderer * renderer, int x, int y);
+(define-sdl SDL_RenderDrawPoint (_fun _SDL_Renderer _int _int -> _int  ))
+;extern DECLSPEC int SDLCALL SDL_RenderDrawPoints(SDL_Renderer * renderer, const SDL_Point * points, int count);
+(define-sdl SDL_RenderDrawPoints (_fun _SDL_Renderer _SDL_Point-pointer _int -> _int))
+;extern DECLSPEC int SDLCALL SDL_RenderDrawLine(SDL_Renderer * renderer, int x1, int y1, int x2, int y2);
+(define-sdl SDL_RenderDrawLine (_fun _SDL_Renderer _int _int _int _int -> _int))
+;extern DECLSPEC int SDLCALL SDL_RenderDrawLines(SDL_Renderer * renderer, const SDL_Point * points, int count);
+(define-sdl SDL_RenderDrawLines (_fun _SDL_Renderer _SDL_Point-pointer _int -> _int  ))
+;extern DECLSPEC int SDLCALL SDL_RenderDrawRect(SDL_Renderer * renderer, const SDL_Rect * rect);
+(define-sdl SDL_RenderDrawRect (_fun _SDL_Renderer _sdl-rect-pointer -> _int))
+;extern DECLSPEC int SDLCALL SDL_RenderDrawRects(SDL_Renderer * renderer, const SDL_Rect * rects, int count);
+(define-sdl SDL_RenderDrawRects (_fun _SDL_Renderer _sdl-rect-pointer _int -> _int  ))
+;extern DECLSPEC int SDLCALL SDL_RenderFillRect(SDL_Renderer * renderer, const SDL_Rect * rect);
+(define-sdl SDL_RenderFillRect (_fun _SDL_Renderer _sdl-rect-pointer -> _int  ))
+;extern DECLSPEC int SDLCALL SDL_RenderFillRects(SDL_Renderer * renderer, const SDL_Rect * rects, int count);
+(define-sdl SDL_RenderFillRects (_fun _SDL_Renderer _sdl-rect-pointer _int -> _int  ))
+
+;extern DECLSPEC int SDLCALL SDL_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture, const SDL_Rect * srcrect, const SDL_Rect * dstrect);
+(define-sdl SDL_RenderCopy (_fun _SDL_Renderer _SDL_Texture
+                                 _sdl-rect-pointer/null _sdl-rect-pointer/null
+                                 -> _int))
+
+(define sdl-render-copy SDL_RenderCopy)
+
+;extern DECLSPEC int SDLCALL SDL_RenderCopyEx(SDL_Renderer * renderer, SDL_Texture * texture, const SDL_Rect * srcrect, const SDL_Rect * dstrect, const double angle, const SDL_Point *center, const SDL_RendererFlip flip);
+(define-sdl SDL_RenderCopyEx (_fun _SDL_Renderer _SDL_Texture _sdl-rect-pointer _sdl-rect-pointer  _double _SDL_Point-pointer _SDL_RendererFlip -> _int))
+
+;extern DECLSPEC int SDLCALL SDL_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect, Uint32 format, void *pixels, int pitch);
+(define-sdl SDL_RenderReadPixels (_fun _SDL_Renderer _sdl-rect-pointer _uint32 _pointer _int -> _int))
+
+;extern DECLSPEC void SDLCALL SDL_RenderPresent(SDL_Renderer * renderer);
+(define-sdl SDL_RenderPresent (_fun _SDL_Renderer -> _void))
+
+(define sdl-render-present SDL_RenderPresent)
+
+;extern DECLSPEC int SDLCALL SDL_GL_BindTexture(SDL_Texture *texture, float *texw, float *texh);
+(define-sdl SDL_GL_BindTexture (_fun _SDL_Texture _float* _float* -> _int))
+;extern DECLSPEC int SDLCALL SDL_GL_UnbindTexture(SDL_Texture *texture);
+(define-sdl SDL_GL_UnbindTexture (_fun _SDL_Texture -> _int))
+
 
 
 ;;

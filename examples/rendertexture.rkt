@@ -31,9 +31,6 @@
         [e (poll-loop)]   ;; has event but it's not quit -> continue processing
         [else #t]))       ;; has no event -> return to main loop, not quit
 
-(define (init-surface sfc)
-  (memset (sdl-surface-pixels sfc) 0 (* (sdl-surface-h sfc) (sdl-surface-pitch sfc))))
-
 (define (render-to-texture texture)
   (define-values (p pitch) (sdl-lock-texture texture #f))
   (for ([i (in-range 0 (* 4 width height) 4)])

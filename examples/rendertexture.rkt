@@ -26,9 +26,8 @@
 ;; returns #t when all events processed and no quit event received,
 ;; #f when quit event was processed
 (define (poll-loop)
-  (define e (sdl-poll-event))
+  (define e (sdl-next-event))
   (cond [(and e (sdl-event-has-type? e SDL-QUIT)) #f]
-        [e (poll-loop)]   ;; has event but it's not quit -> continue processing
         [else #t]))       ;; has no event -> return to main loop, not quit
 
 (define (render-to-texture texture)

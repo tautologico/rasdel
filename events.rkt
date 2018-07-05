@@ -359,14 +359,19 @@
 (define-sdl  SDL_FlushEvents (_fun _uint32 _uint32 -> _void))
 
 ;extern DECLSPEC int SDLCALL SDL_PollEvent(SDL_Event * event);
-(define-sdl  SDL_PollEvent (_fun [e : (_ptr o _SDL_Event)]
-                                 -> (c : _int)
-                                 -> (if (> c 0) e #f)))
+(define-sdl  SDL_PollEvent (_fun _SDL_Event* -> _int))
 
 (define sdl-poll-event SDL_PollEvent)
 
+;; allocates a new event in every call
+(define (sdl-next-event)
+  (define e (malloc _SDL_Event 'atomic))
+  (cpointer-push-tag! e SDL_Event*-tag)
+  (define count (SDL_PollEvent e))
+  (if (= count 1) e #f))
+
 (define (sdl-event-has-type? e t)
-  (= (union-ref e 0)
+  (= (union-ref (ptr-ref e _SDL_Event) 0)
      t))
 
 ;extern DECLSPEC int SDLCALL SDL_WaitEvent(SDL_Event * event);

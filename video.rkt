@@ -19,7 +19,7 @@
 
 (define (sdl-create-window title width height)
   (SDL_CreateWindow title SDL_WINDOWPOS_UNDEFINED SDL_WINDOWPOS_UNDEFINED
-                    width height 0))
+                    width height #x04))
 
 ;;
 ;; Foreign API

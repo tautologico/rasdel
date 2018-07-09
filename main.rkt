@@ -20,6 +20,9 @@
  sdl-render-copy sdl-render-present
  sdl-get-window-surface sdl-update-window-surface sdl-must-lock-surface?
  sdl-get-pixel-format-name sdl-map-rgb
+ sdl-allocate-event sdl-next-event
+
+ SDL_GetWindowFlags
 
  ;; structs
  (struct-out sdl-renderer-info)

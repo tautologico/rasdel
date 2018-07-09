@@ -374,6 +374,25 @@
   (= (union-ref (ptr-ref e _SDL_Event) 0)
      t))
 
+(define (sdl-allocate-event)
+  (define res (malloc _SDL_Event 'atomic))
+  (cpointer-push-tag! res SDL_Event*-tag)
+  res)
+
+(define current-event #f)
+
+(define (sdl-init-events)
+  (set! current-event (malloc _SDL_Event 'atomic))
+  (cpointer-push-tag! current-event SDL_Event*-tag))
+
+(define (sdl-process-event)
+  (define count (sdl-poll-event current-event))
+  (= count 1))
+
+;; TODO: query about the event
+;; TODO: match-event to test event type & destructure it
+
+
 ;extern DECLSPEC int SDLCALL SDL_WaitEvent(SDL_Event * event);
 (define-sdl  SDL_WaitEvent (_fun _SDL_Event* -> _int))
 ;extern DECLSPEC int SDLCALL SDL_WaitEventTimeout(SDL_Event * event, int timeout);

@@ -9,13 +9,14 @@
 (require "base.rkt")
 (require "video.rkt")
 (require "events.rkt")
+(require "keycodes.rkt")
 
 (provide
  sdl-init sdl-quit sdl-get-error
  sdl-get-num-render-drivers sdl-get-render-driver-info
  sdl-create-window sdl-create-renderer
  sdl-create-texture sdl-create-streaming-texture
- sdl-poll-event sdl-event-has-type?
+ sdl-poll-event sdl-event-has-type? sdl-keyboard-event-data
  sdl-lock-texture sdl-unlock-texture
  sdl-render-copy sdl-render-present
  sdl-get-window-surface sdl-update-window-surface sdl-must-lock-surface?
@@ -25,14 +26,18 @@
  SDL_GetWindowFlags
 
  ;; structs
+ (struct-out sdl-keysym)
  (struct-out sdl-renderer-info)
  (struct-out sdl-surface)
  (struct-out SDL_PixelFormat)
 
  ;; events
- SDL-QUIT
+ SDL-QUIT SDL-KEYDOWN SDL-KEYUP
 
  ;; pixel formats
  SDL-PIXEL-FORMAT-RGB888 SDL-PIXEL-FORMAT-RGBX8888
  SDL-PIXEL-FORMAT-BGR888 SDL-PIXEL-FORMAT-BGRX8888
- SDL-PIXEL-FORMAT-RGBA8888 SDL-PIXEL-FORMAT-ARGB8888)
+ SDL-PIXEL-FORMAT-RGBA8888 SDL-PIXEL-FORMAT-ARGB8888
+
+ ;; keycodes
+ (all-from-out "keycodes.rkt"))

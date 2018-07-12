@@ -120,6 +120,12 @@
    [data1 _int32]
    [data2 _int32]))
 
+(define-cstruct _sdl-keysym
+  ([scancode _int32]         ;; assumes enums are 4 bytes
+   [sym _int32]
+   [mod _uint16]
+   [unused _uint32]))
+
 (define-cstruct _SDL_KeyboardEvent
   ([type _uint32]
    [timestamp _uint32]
@@ -127,7 +133,8 @@
    [state _uint8]
    [repeat _uint8]
    [padding2 _uint8]
-   [padding3 _uint8]))
+   [padding3 _uint8]
+   [keysym _sdl-keysym]))
 
 (define-cstruct _SDL_TextEditingEvent
   ([type _uint32]
@@ -369,6 +376,9 @@
   (cpointer-push-tag! e SDL_Event*-tag)
   (define count (SDL_PollEvent e))
   (if (= count 1) e #f))
+
+(define (sdl-keyboard-event-data e)
+  (SDL_KeyboardEvent-keysym (union-ref (ptr-ref e _SDL_Event) 3)))
 
 (define (sdl-event-has-type? e t)
   (= (union-ref (ptr-ref e _SDL_Event) 0)
